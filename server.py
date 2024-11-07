@@ -2,6 +2,7 @@ from random import randint
 import pprint
 import matplotlib.pyplot as plt
 import math
+import time
 
 class staticBST:
     def __init__(self, N):
@@ -232,7 +233,7 @@ class Client:
             if u == v:
                 return self.L
             lca_level = 0
-            for i in range(L):
+            for i in range(self.L):
                 # print("i", i, "u_bin[i]", u_bin[i], "v_bin[i]", v_bin[i])
                 if u_bin[i] != v_bin[i]:
                     lca_level = i
@@ -269,18 +270,30 @@ class Client:
 
 def simulate(L, N, Z, total_runs = 1_000, warmup_runs = 100):
     print("starting simulation for L = ", L, " and Z = ", Z)
-    sim_file = f"simulation_L_{L}_Z_{Z}.txt"
-    f = open(sim_file, "w")
     sim_runs = total_runs - warmup_runs
+    sim_file = f"simulation_L_{L}_Z_{Z}_sim_runs_{sim_runs}.txt"
+    f = open(sim_file, "w")
+    
     # f.write(f"L = {L}, N = {N}, Z = {Z}, total_runs = {total_runs}, warmup_runs = {warmup_runs}\n")
     f.write(f"-1, {sim_runs}\n")
+
+    start_time = time.time()
+
     client = Client(L, N, Z)
+
+    elapsed_time = time.time() - start_time  # Calculate elapsed time in seconds
+    elapsed_minutes = elapsed_time / 60  # Convert to minutes
+    print(f"Time elapsed after initializing: {elapsed_minutes:.2f} minutes")
 
     stash_sizes = []
 
     for i in range(total_runs):
-        if i % (2**16) == 0:
+        if i % (2**15) == 0:
             print(f"run # {i}")
+            elapsed_time = time.time() - start_time  # Calculate elapsed time in seconds
+            elapsed_minutes = elapsed_time / 60  # Convert to minutes
+            print(f"Time elapsed: {elapsed_minutes:.2f} minutes")
+            print()
         id = i % N
         op = "read"
         # print("stash size before", len(client.stash))
@@ -288,7 +301,8 @@ def simulate(L, N, Z, total_runs = 1_000, warmup_runs = 100):
         # print(f"block {id}", block)
         assert id == block.id
         stash_size = len(client.stash)
-        # print("stash size after:", stash_size)
+        if i % (2**15) == 0:
+            print("stash size:", stash_size)
         if i >= warmup_runs:
             stash_sizes.append(stash_size)
     print("simulation complete")
@@ -367,7 +381,8 @@ def plot_all_simulations(L, N, Z_values, num_accesses):
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
     for i in range(len(Z_values)):
         Z = Z_values[i]
-        sim_file = f"simulation_L_{L}_Z_{Z}.txt"
+        sim_runs = num_accesses
+        sim_file = f"simulation_L_{L}_Z_{Z}_sim_runs_{sim_runs}.txt"
         f = open(sim_file, "r")
         lines = f.readlines()
         f.close()
@@ -401,7 +416,7 @@ def plot_all_simulations(L, N, Z_values, num_accesses):
     plt.grid()
     plt.legend()
 
-    fig_file = f"stash_size_plot_Z_values_" + "_".join([str(Z) for Z in Z_values]) + ".png"
+    fig_file = f"stash_size_plot_Z_values_" + "_".join([str(Z) for Z in Z_values]) + "_sim_runs_" + str(num_accesses) + ".png"
     plt.savefig(fig_file, dpi=300, bbox_inches='tight')
 
     # plt.show()
@@ -414,18 +429,18 @@ if __name__ == '__main__':
 
     L = 20
     N = 2 ** L 
-    total_runs = 10_000
-    warmup_runs = 1_000
+    total_runs = 2_000_000
+    warmup_runs = 1_000_000
     sim_runs = total_runs - warmup_runs
 
 
-    Z_values = [4, 6]
+    Z_values = [2, 4, 6]
     for Z in Z_values:
         _gtFreqs = simulate(L, N, Z, total_runs, warmup_runs)
     plot_all_simulations(L, N, Z_values, sim_runs)
 
-    Z_values = [2]
-    for Z in Z_values:
-        _gtFreqs = simulate(L, N, Z, total_runs, warmup_runs)
-    plot_all_simulations(L, N, Z_values, sim_runs)
+    # Z_values = [2]
+    # for Z in Z_values:
+    #     _gtFreqs = simulate(L, N, Z, total_runs, warmup_runs)
+    # plot_all_simulations(L, N, Z_values, sim_runs)
     
