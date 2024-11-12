@@ -273,6 +273,9 @@ def simulate(L, N, Z, total_runs = 1_000, warmup_runs = 100):
     sim_runs = total_runs - warmup_runs
     sim_file = f"simulation_L_{L}_Z_{Z}_sim_runs_{sim_runs}.txt"
     f = open(sim_file, "w")
+
+    stash_size_filename = f"stash_size_L_{L}_Z_{Z}_sim_runs_{sim_runs}.txt"
+    stash_size_f = open(stash_size_filename, "w")
     
     # f.write(f"L = {L}, N = {N}, Z = {Z}, total_runs = {total_runs}, warmup_runs = {warmup_runs}\n")
     f.write(f"-1, {sim_runs}\n")
@@ -301,10 +304,12 @@ def simulate(L, N, Z, total_runs = 1_000, warmup_runs = 100):
         # print(f"block {id}", block)
         assert id == block.id
         stash_size = len(client.stash)
-        if i % (2**15) == 0:
-            print("stash size:", stash_size)
+        # if i % (2**15) == 0:
+        #     print("stash size:", stash_size)
         if i >= warmup_runs:
             stash_sizes.append(stash_size)
+            stash_size_f.write(f"{stash_size}\n")
+
     print("simulation complete")
     print("max stash size", max(stash_sizes))
 
@@ -429,8 +434,8 @@ if __name__ == '__main__':
 
     L = 20
     N = 2 ** L 
-    total_runs = 2_000_000
-    warmup_runs = 1_000_000
+    total_runs = 1_000
+    warmup_runs = 300
     sim_runs = total_runs - warmup_runs
 
 
@@ -438,9 +443,4 @@ if __name__ == '__main__':
     for Z in Z_values:
         _gtFreqs = simulate(L, N, Z, total_runs, warmup_runs)
     plot_all_simulations(L, N, Z_values, sim_runs)
-
-    # Z_values = [2]
-    # for Z in Z_values:
-    #     _gtFreqs = simulate(L, N, Z, total_runs, warmup_runs)
-    # plot_all_simulations(L, N, Z_values, sim_runs)
     
